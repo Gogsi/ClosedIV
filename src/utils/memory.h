@@ -97,11 +97,16 @@ public:
 		put<uint8_t>(0xC3);
 	}
 
+	inline void make_jmp(void* func)
+	{
+		make_jmp((uintptr_t)func);
+	}
+
 	inline void make_jmp(uintptr_t func)
 	{
-		memory(address, false).put<uint16_t>(0xB848);
-		memory(address + 2, false).put<uintptr_t>(func);
-		memory(address + 10, false).put<uint16_t>(0xE0FF);
+		memory(address, false).put<uint16_t>(0xB848);     // mov rax,
+		memory(address + 2, false).put<uintptr_t>(func);  //          func
+		memory(address + 10, false).put<uint16_t>(0xE0FF);// jump rax
 	}
 
 	inline void make_jmp_ret(void* func)
@@ -111,9 +116,9 @@ public:
 
 	inline void make_jmp_ret(uintptr_t func)
 	{
-		memory(address, false).put<uint16_t>(0xB848);
-		memory(address + 2, false).put<uintptr_t>(func);
-		memory(address + 10, false).put<uint16_t>(0xC350);
+		memory(address, false).put<uint16_t>(0xB848);     // mov rax,
+		memory(address + 2, false).put<uintptr_t>(func);  //          func
+		memory(address + 10, false).put<uint16_t>(0xC350);// push rax; ret
 	}
 
 	inline void make_call(uintptr_t func)
@@ -193,7 +198,10 @@ public:
 		PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)PtrFromRva(pDosHeader, pDosHeader->e_lfanew);
 
 		if (pNtHeader->Signature != IMAGE_NT_SIGNATURE)
+		{
+			logger::write("info", "IAT hook failed: Invalid NT_HEADER signature");
 			return FALSE;
+		}
 
 		PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)PtrFromRva(pDosHeader, pNtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 
@@ -205,7 +213,10 @@ public:
 				continue;
 
 			if (!pImportDescriptor[uIndex].FirstThunk || !pImportDescriptor[uIndex].OriginalFirstThunk)
+			{
+				logger::write("info", "IAT hook failed: No thunk");
 				return FALSE;
+			}
 
 			PIMAGE_THUNK_DATA pThunk = (PIMAGE_THUNK_DATA)PtrFromRva(pDosHeader, pImportDescriptor[uIndex].FirstThunk);
 			PIMAGE_THUNK_DATA pOrigThunk = (PIMAGE_THUNK_DATA)PtrFromRva(pDosHeader, pImportDescriptor[uIndex].OriginalFirstThunk);
@@ -217,6 +228,7 @@ public:
 
 				PIMAGE_IMPORT_BY_NAME import = (PIMAGE_IMPORT_BY_NAME)PtrFromRva(pDosHeader, pOrigThunk->u1.AddressOfData);
 
+
 				if (_strcmpi(szFuncName, (char*)import->Name) != 0)
 					continue;
 
@@ -225,16 +237,27 @@ public:
 
 				VirtualQuery(pThunk, &mbi, sizeof(MEMORY_BASIC_INFORMATION));
 				if (!VirtualProtect(mbi.BaseAddress, mbi.RegionSize, PAGE_EXECUTE_READWRITE, &mbi.Protect))
+				{
+					logger::write("info", "IAT hook failed: Enabling PAGE_EXECUTE_READWRITE with VirtualProtect");
 					return FALSE;
+				}
 
 				*pOldFunc = (PVOID*)(DWORD_PTR)pThunk->u1.Function;
 
 				pThunk->u1.Function = (ULONGLONG)(DWORD_PTR)pNewFunc;
 
 				if (VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, &dwJunk))
+				{
+					logger::write("info", "IAT hooked function %s", (char*)import->Name);
+
 					return TRUE;
+				}
+				else {
+					logger::write("info", "IAT hook failed: Restoring original VirtualProtect");
+				}
 			}
 		}
+		logger::write("info", "failed to find IAT entry for %s.%s", szModuleName, szFuncName);
 		return FALSE;
 	}
 

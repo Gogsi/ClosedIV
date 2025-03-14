@@ -2,6 +2,7 @@
 
 HANDLE OpenBulkHook(void* device, const char* path, __int64* a3)
 {
+	//logger::write("mods", "OpenBulk - %s",  path);
 	HANDLE FileW;
 	WCHAR WideCharStr[256];
 
@@ -76,16 +77,19 @@ uint64_t GetAttributesHook(void* device, const char* path)
 }
 
 static memory::InitFuncs FileReadHooks([] {
-	//hooks for reading files
-	memory::scan("40 53 48 81 EC ? ? ? ? 49 8B D8 4C 8B C2 48 8D 4C 24 ? BA ? ? ? ? E8 ? ? ? ? 48 83 64 24")
-		.make_jmp_ret(OpenBulkHook);
+	// disable rpf.cache
+	memory::scan("48 8D 74 24 70 48 89 F2 41 B8 00 01 00 00").add(-23).rip().put("lol.cache");
 
-	memory::scan("48 81 EC ? ? ? ? 4C 8B C2 48 8D 4C 24 ? BA ? ? ? ? E8 ? ? ? ? 4C 8D 44 24 ? 33 D2 48 8B C8 FF 15 ? ? ? ? 85 C0 75 04 33 C0 EB 0F 8B 44 24 38 8B 4C 24 34 48 C1 E0 20 48 0B C1 48 81 C4")
+	//hooks for reading files
+	memory::scan("48 81 EC 98 04 00 00 44 89 C3").add(-5)
+		.make_jmp_ret(OpenBulkHook);
+		
+	memory::scan("48 81 EC 70 02 00 00 66 C7 44 24 60 00 00").add(-3)
 		.make_jmp_ret(GetFileTimeHook);
 
-	memory::scan("48 81 EC ? ? ? ? 4C 8B C2 48 8D 4C 24 ? BA ? ? ? ? E8 ? ? ? ? 4C 8D 44 24 ? 33 D2 48 8B C8 FF 15 ? ? ? ? 85 C0 75 04 33 C0 EB 0F 8B 44 24 3C 8B 4C 24 40 48 C1 E0 20 48 0B C1 48 81 C4")
+	memory::scan("48 81 EC 70 02 00 00 66 C7 44 24 60 00 00").add(-3)
 		.make_jmp_ret(GetFileSizeHook);
 
-	memory::scan("48 89 5C 24 ? 57 48 81 EC ? ? ? ? 4C 8B C2 48 8D 4C 24 ? BA ? ? ? ? E8 ? ? ? ? 48 8B C8 FF 15 ? ? ? ? 83 CF FF 8B D8 3B C7 74 0F 48 8D 4C 24")
+	memory::scan("48 81 EC 98 04 00 00 66 C7 44 24 38 00 00").add(-5)
 		.make_jmp_ret(GetAttributesHook);
 });

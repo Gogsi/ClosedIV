@@ -2,9 +2,9 @@
 
 void logger::init()
 {
-	if(std::filesystem::exists("ClosedIV.log"))
+	if(std::filesystem::exists("C:\\Logs\\ClosedIV.log"))
 	{
-		std::filesystem::remove("ClosedIV.log");
+		std::filesystem::remove("C:\\Logs\\ClosedIV.log");
 	}
 }
 
@@ -23,10 +23,11 @@ void logger::write(const char* type, const char* msg, ...)
 
 	if (config::get_log(type))
 	{
-		std::ofstream logFile("ClosedIV.log", std::ofstream::out | std::ofstream::app);
+		std::ofstream logFile("C:\\Logs\\ClosedIV.log", std::ofstream::out | std::ofstream::app);
 		logFile.write(buffer, strlen(buffer));
 		logFile.write("\n", 1);
 		logFile.flush();
 		logFile.close();
+		_flushall(); // Ensures all streams are flushed (Windows-specific)
 	}
 }

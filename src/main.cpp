@@ -1,4 +1,5 @@
 #include "main.h"
+#include "processthreadsapi.h"
 
 static bool bInited = false;
 void (*origGetSystemTimeAsFileTime)(LPFILETIME lpSystemTimeAsFileTime);
@@ -6,11 +7,12 @@ void HookGetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime)
 {
 	if (!bInited)
 	{
+		logger::write("info", "Starting ClosedIV Init!");
 		bInited = true;
 		memory::init();
 
 		//don't hide the console
-		memory::scan("FF 15 ? ? ? ? E8 ? ? ? ? 65 48 8B 0C 25 ? ? ? ? 8B 05 ? ? ? ? 48 8B 04 C1 BA ? ? ? ? 83 24 02 00 E8").nop(6);
+		memory::scan("FF 15 ? ? ? ? 48 85 C0 74 ? 48 89 C1").nop(6);
 
 		memory::InitFuncs::run();
 
@@ -34,7 +36,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  dwReason, LPVOID lpReserved)
 			AllocConsole();
 
 			FILE* unused = nullptr;
-			freopen_s(&unused, "CONIN$", "r", stdin);
+			freopen_s(&unused, "CONIN$", "r", stdin); 
 			freopen_s(&unused, "CONOUT$", "w", stdout);
 			freopen_s(&unused, "CONOUT$", "w", stderr);
 		}

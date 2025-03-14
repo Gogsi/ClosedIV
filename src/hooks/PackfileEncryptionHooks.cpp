@@ -55,17 +55,17 @@ bool ParseHeaderHook(rage::fiPackfile* a1, const char* name, bool readHeader, vo
 
 static memory::InitFuncs PackfileEncryptionHooks([] {
 	//allow unencrypted RPFs
-	memory::scan("E8 ? ? ? ? 48 8B 53 20 44 8B C7 41 8B CE E8").set_call(FindEncryptionHook);
+	//memory::scan("89 8E BC 00 00 00 E8 ? ? ? ? 80 7C").add(6).set_call(FindEncryptionHook);
 
-	auto mem = memory::scan("E8 ? ? ? ? 41 8B D4 44 39 63 28 76 3F 41 B9");
+	auto mem = memory::scan("74 0F 48 8B 56 28 44 89 E1").add(12);
 	DecryptHeaderOrig = mem.add(1).rip().as<decltype(DecryptHeaderOrig)>();
 	mem.set_call(DecryptHeaderHook);
 
-	mem = memory::scan("E8 ? ? ? ? 8B 55 F8 48 8B 43 10 48 03 D0 48 8B CB 48 89 53 18 66 44 89 22 33 D2 E8");
+	mem = memory::scan("8B 8E BC 00 00 00  44 89 E2 4D 89 F8").add(12);
 	DecryptHeader2Orig = mem.add(1).rip().as<decltype(DecryptHeader2Orig)>();
 	mem.set_call(DecryptHeader2Hook);
 
-	mem = memory::scan("44 88 BB ? ? ? ? 89 43 58 E8 ? ? ? ? 4C 8D 9C 24 ? ? ? ? 49 8B 5B 38 49 8B 73 40 49 8B 7B 48 49 8B E3 41 5F 41 5E 41 5D 41 5C 5D C3").add(10);
+	mem = memory::scan("C6 86 B0 00 00 00 00 48 89 F1").add(19);
 	ParseHeaderOrig = mem.add(1).rip().as<decltype(ParseHeaderOrig)>();
 	mem.set_call(ParseHeaderHook);
 });
