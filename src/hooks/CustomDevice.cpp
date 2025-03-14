@@ -1,5 +1,5 @@
 #include "main.h"
-#if 0
+
 /*
 	List of stuff you can replace with this: https://gist.github.com/martonp96/59f731446c7f17db3f400c2be458c4a4
 
@@ -93,4 +93,3 @@ void InitialMountHook()
 //	memory::scan("48 8B C4 48 89 58 10 48 89 70 18 48 89 78 20 55 41 54 41 55 41 56 41 57 48 8D 68 98 48 81 EC ? ? ? ? 41 8B F9 4C 8B E2 48 8B D9 4C 8B CA 48 8D 05")
 //		.hook(OpenArchiveHook, &OpenArchiveOrig);
 //});
-#endif

@@ -18,7 +18,7 @@ void rage::fiDevice::SetPath(const char* path, bool allowRoot, rage::fiDevice* p
 	func(this, path, allowRoot, parent);
 }
 
-#if 0
+
 rage::fiDeviceRelative::fiDeviceRelative()
 {
 	static auto relativeDeviceVMT = memory::scan("48 8D 05 ? ? ? ? 48 89 03 EB ? 33 DB 48 8D 15 ? ? ? ? 45 33 C9").add(3).rip().as<void*>();
@@ -399,4 +399,3 @@ void rage::fiDeviceLocal::ConvertFoundData(LPWIN32_FIND_DATAW foundDataWin, rage
 	foundDataRage->fileAttributes = foundDataWin->dwFileAttributes;
 	foundDataRage->fileSize = *(uint64_t*)(&foundDataWin->nFileSizeHigh);
 }
-#endif
